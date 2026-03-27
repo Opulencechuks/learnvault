@@ -12,21 +12,21 @@ import { initDb } from "./db/index"
 import { createNonceStore } from "./db/nonce-store"
 import { errorHandler } from "./middleware/error.middleware"
 import { globalLimiter } from "./middleware/rate-limit.middleware"
+import { buildOpenApiSpec } from "./openapi"
+import { adminMilestonesRouter } from "./routes/admin-milestones.routes"
 import { createAuthRouter } from "./routes/auth.routes"
+import { commentsRouter } from "./routes/comments.routes"
+import { coursesRouter } from "./routes/courses.routes"
+import { eventsRouter } from "./routes/events.routes"
 import { healthRouter } from "./routes/health.routes"
 import { createMeRouter } from "./routes/me.routes"
+import { uploadRouter } from "./routes/upload.routes"
+import { validatorRouter } from "./routes/validator.routes"
 import { createAuthService } from "./services/auth.service"
 import {
 	createJwtService,
 	generateEphemeralDevJwtKeys,
 } from "./services/jwt.service"
-import { validatorRouter } from "./routes/validator.routes"
-import { commentsRouter } from "./routes/comments.routes"
-import { adminMilestonesRouter } from "./routes/admin-milestones.routes"
-import { uploadRouter } from "./routes/upload.routes"
-import { coursesRouter } from "./routes/courses.routes"
-import { eventsRouter } from "./routes/events.routes"
-import { buildOpenApiSpec } from "./openapi"
 
 // Load server/.env whether you run from repo root or from server/
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") })
@@ -94,9 +94,9 @@ app.use("/api", uploadRouter)
 
 // Start event poller (non-prod only for now)
 if (process.env.NODE_ENV !== "production") {
-  import('./workers/event-poller.js').then(({ startEventPoller }) => {
-    startEventPoller().catch(console.error)
-  })
+	void import("./workers/event-poller.js").then(({ startEventPoller }) => {
+		startEventPoller().catch(console.error)
+	})
 }
 
 app.get("/api/docs", (_req, res) => {
@@ -110,9 +110,11 @@ if (process.env.NODE_ENV !== "production") {
 app.use(errorHandler)
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  import('./workers/event-poller.js').then(({ stopEventPoller }) => stopEventPoller())
-  process.exit(0)
+process.on("SIGTERM", () => {
+	void import("./workers/event-poller.js").then(({ stopEventPoller }) =>
+		stopEventPoller(),
+	)
+	process.exit(0)
 })
 
 app.listen(env.PORT, () => {

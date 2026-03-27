@@ -1,5 +1,5 @@
-import { rpcUrl, networkPassphrase } from "./util"
 import { useWallet } from "../hooks/useWallet"
+import { rpcUrl, networkPassphrase } from "./util"
 
 // Contract interface for ScholarshipTreasury
 export interface ScholarshipTreasuryContract {
@@ -28,14 +28,14 @@ export interface CreateProposalParams {
 // Mock contract implementation - replace with actual Stellar Soroban contract calls
 export class ScholarshipTreasury implements ScholarshipTreasuryContract {
 	private contractId: string
-	private { address, signAndSendTransaction } = useWallet()
+	private address: string | null = null
 
 	constructor(contractId: string) {
 		this.contractId = contractId
 	}
 
 	async createProposal(params: CreateProposalParams): Promise<string> {
-		if (!address) {
+		if (!this.address) {
 			throw new Error("Wallet not connected")
 		}
 
@@ -48,13 +48,13 @@ export class ScholarshipTreasury implements ScholarshipTreasuryContract {
 
 			// Mock implementation for demonstration
 			const mockTxHash = `PROPOSAL_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-			
+
 			console.log("Creating proposal with params:", params)
 			console.log("Contract ID:", this.contractId)
-			console.log("Submitting from address:", address)
+			console.log("Submitting from address:", this.address)
 
 			// Simulate contract call delay
-			await new Promise(resolve => setTimeout(resolve, 1500))
+			await new Promise((resolve) => setTimeout(resolve, 1500))
 
 			return mockTxHash
 		} catch (error) {
@@ -105,22 +105,28 @@ export class ScholarshipTreasury implements ScholarshipTreasuryContract {
 }
 
 // Contract factory function
-export const createScholarshipTreasuryContract = (contractId: string): ScholarshipTreasury => {
+export const createScholarshipTreasuryContract = (
+	contractId: string,
+): ScholarshipTreasury => {
 	return new ScholarshipTreasury(contractId)
 }
 
 // Default contract ID - this should come from environment variables or config
-export const SCHOLARSHIP_TREASURY_CONTRACT_ID = "CB7N4QZJ5K7GYRJAFV4JGHQZP2S5F2ZQ6YR7F4QZJ5K7GYRJAFV4JGHQZP2S5F2ZQ"
+export const SCHOLARSHIP_TREASURY_CONTRACT_ID =
+	"CB7N4QZJ5K7GYRJAFV4JGHQZP2S5F2ZQ6YR7F4QZJ5K7GYRJAFV4JGHQZP2S5F2ZQ"
 
 // Hook for using the contract
 export const useScholarshipTreasury = () => {
 	const { address } = useWallet()
-	const contract = createScholarshipTreasuryContract(SCHOLARSHIP_TREASURY_CONTRACT_ID)
+	const contract = createScholarshipTreasuryContract(
+		SCHOLARSHIP_TREASURY_CONTRACT_ID,
+	)
 
 	return {
 		contract,
 		createProposal: contract.createProposal.bind(contract),
-		getGovernanceTokenBalance: contract.getGovernanceTokenBalance.bind(contract),
+		getGovernanceTokenBalance:
+			contract.getGovernanceTokenBalance.bind(contract),
 		getMinimumProposalTokens: contract.getMinimumProposalTokens.bind(contract),
 		isConnected: !!address,
 		userAddress: address,
